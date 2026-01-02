@@ -1,0 +1,37 @@
+# .github/workflows/generate-file-list.yml
+name: Generate File List
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'guidelines/**/*.html'
+      - 'weekly reports/**/*.html'
+      - 'aoc reports/**/*.html'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # 이 줄 추가!
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Generate file list
+        run: |
+          # Create JSON object with multiple report categories
+          jq -n \
+            --arg gl "$(cd "guidelines" && find . -maxdepth 1 -name "*.html" -type f -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')" \
+            --arg wa "$(cd "weekly reports" && find . -maxdepth 1 -name "*.html" -type f -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')" \
+            --arg aoc "$(cd "aoc reports" && find . -maxdepth 1 -name "*.html" -type f -printf "%f\n" | jq -R -s -c 'split("\n")[:-1]')" \
+            '{gl: {title: "Essential Information", id: "guidelines", folderPath: "guidelines", files: ($gl | fromjson)}, wa: {title: "Weekly Activity Reports", id: "waReportsList", folderPath: "weekly reports", files: ($wa | fromjson)}, aoc: {title: "Area of Conquest Activity Reports", id: "aocReportsList", folderPath: "aoc reports", files: ($aoc | fromjson)}}' > files.json
+          
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add files.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update file list"
+          git push
