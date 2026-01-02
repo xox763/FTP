@@ -9,9 +9,7 @@
     "title": "Weekly Activity Reports",
     "id": "waReportsList",
     "folderPath": "weekly reports",
-    "files": [
-      "activity_20251222_7days.html"
-    ]
+    "files": []
   },
   "aoc": {
     "title": "Area of Conquest Activity Reports",
